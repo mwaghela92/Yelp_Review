@@ -20,17 +20,18 @@ import requests
 import urllib.parse
 from nltk.corpus import stopwords
 import pandas as pd
+from retry import *
 entities = pd.DataFrame({'Entities' : ['Count'] , 'person' : [0],'place' : [0],
                                    'animal' : [0],'city' : [0], 'country' : [0],
                                    'organisation' : [0],'Food' : [0]})
-
+data = pd.read_csv('E:/mayur/yelp_review/Data/yelp.csv')
 ## initial consts
 BASE_URL = 'http://api.dbpedia-spotlight.org/en/annotate?text={text}&confidence={confidence}&support={support}'
-Text = 
 CONFIDENCE = '0.2'
 SUPPORT = '10'
 
-    Text = 
+for z in range(5):
+    Text = data.loc[z,'text']
     Text = Text.split()
     Text1 = [word for word in Text if word not in stopwords.words('english')]
     TEXT = ' '.join(Text1)
@@ -43,7 +44,7 @@ SUPPORT = '10'
     sparql = SPARQLWrapper("http://dbpedia.org/sparql")
     all_urls = []
     
-    r = requests.get(url = REQUEST , headers=HEADERS)
+    r = retried_func(url = REQUEST , headers=HEADERS)
     response = r.json()
     resources = response['Resources']
     
@@ -52,7 +53,7 @@ SUPPORT = '10'
     
     x = list()
         
-        for i in range(len(all_urls)):
+    for i in range(len(all_urls)):
             #i=0
             
             values = '(<{0}>)'.format(all_urls[i])
@@ -79,27 +80,27 @@ SUPPORT = '10'
                 x[i].append( result['l']['value'])
             
             
-        item = list()
-        for res in resources:
-            item.append(res['@surfaceForm'])
+    item = list()
+    for res in resources:
+        item.append(res['@surfaceForm'])
         
-        mainlist = {}
-        j = 0
-        for i in item:
-            mainlist[i] = x[j]
-            j = j +1
+    mainlist = {}
+    j = 0
+    for i in item:
+        mainlist[i] = x[j]
+        j = j +1
         
-        for i in mainlist:
-            print(i,':', mainlist[i][:])
-            print ('\n')
+    for i in mainlist:
+        print(i,':', mainlist[i][:])
+        print ('\n')
             
         
         #entities.ProperNoun = item
         
-        m=0
+    m=0
         
-        for i in mainlist:   
-            print(i)
-            for j in range(1,len(entities.columns)):
-                if (entities.columns[j] in mainlist[i][:]):
-                        entities.loc[m,entities.columns[j]]= entities.loc[m,entities.columns[j]] +1
+    for i in mainlist:   
+        print(i)
+        for j in range(1,len(entities.columns)):
+            if (entities.columns[j] in mainlist[i][:]):
+                entities.loc[m,entities.columns[j]]= entities.loc[m,entities.columns[j]] +1
