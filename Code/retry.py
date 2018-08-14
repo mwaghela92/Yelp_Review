@@ -19,5 +19,7 @@ def retried_func(*args, **kwargs):
                 tries += 1
                 continue
             break
+        if resp.status_code > 200:
+            resp = 'none'
         return resp
     

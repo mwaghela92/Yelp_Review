@@ -24,6 +24,14 @@ from retry import *
 entities = pd.DataFrame({'Entities' : ['Count'] , 'person' : [0],'place' : [0],
                                    'animal' : [0],'city' : [0], 'country' : [0],
                                    'organisation' : [0],'Food' : [0]})
+
+
+
+resourcelist = pd.DataFrame({'Entities' : ['Count'] , 'person' : [[]],'place' : [[]],
+                                   'animal' : [[]],'city' : [[]], 'country' : [[]],
+                                   'organisation' : [[]],'Food' : [[]]})
+
+
 data = pd.read_csv('E:/mayur/yelp_review/Data/yelp.csv')
 ## initial consts
 BASE_URL = 'http://api.dbpedia-spotlight.org/en/annotate?text={text}&confidence={confidence}&support={support}'
@@ -31,6 +39,7 @@ CONFIDENCE = '0.2'
 SUPPORT = '10'
 
 for z in range(5):
+    #z = 1919
     Text = data.loc[z,'text']
     Text = Text.split()
     Text1 = [word for word in Text if word not in stopwords.words('english')]
@@ -45,62 +54,73 @@ for z in range(5):
     all_urls = []
     
     r = retried_func(url = REQUEST , headers=HEADERS)
-    response = r.json()
-    resources = response['Resources']
-    
-    for res in resources:
-        all_urls.append(res['@URI'])
-    
-    x = list()
+    if r != 'none':
+        response = r.json()
+        resources = response['Resources']
         
-    for i in range(len(all_urls)):
-            #i=0
+        for res in resources:
+            all_urls.append(res['@URI'])
+        
+        x = list()
             
-            values = '(<{0}>)'.format(all_urls[i])
-        
-            sparql.setQuery(
-            """PREFIX vrank:<http://purl.org/voc/vrank#>
-               SELECT DISTINCT ?l ?rank
-               FROM <http://dbpedia.org> 
-               FROM <http://people.aifb.kit.edu/ath/#DBpedia_PageRank>
-               WHERE {
-                   VALUES (?s) {""" + values + 
-            """    }
-               ?s rdf:type ?p .
-               ?p rdfs:label ?l.
-               FILTER (lang(?l) = 'en')
-            } limit 6
-                """)
-        
-            sparql.setReturnFormat(JSON)
-            results = sparql.query().convert()
+        for i in range(len(all_urls)):
+                #i=0
+                
+                values = '(<{0}>)'.format(all_urls[i])
             
-            x.append([])
-            for result in results["results"]["bindings"]:
-                x[i].append( result['l']['value'])
+                sparql.setQuery(
+                """PREFIX vrank:<http://purl.org/voc/vrank#>
+                   SELECT DISTINCT ?l ?rank
+                   FROM <http://dbpedia.org> 
+                   FROM <http://people.aifb.kit.edu/ath/#DBpedia_PageRank>
+                   WHERE {
+                       VALUES (?s) {""" + values + 
+                """    }
+                   ?s rdf:type ?p .
+                   ?p rdfs:label ?l.
+                   FILTER (lang(?l) = 'en')
+                } limit 6
+                    """)
+            
+                sparql.setReturnFormat(JSON)
+                results = sparql.query().convert()
+                
+                x.append([])
+                for result in results["results"]["bindings"]:
+                    x[i].append( result['l']['value'])
+                
+                
+        item = list()
+        for res in resources:
+            item.append(res['@surfaceForm'])
+            
+        mainlist = {}
+        j = 0
+        for i in item:
+            mainlist[i] = x[j]
+            j = j +1
+            
+        for i in mainlist:
+            print(i,':', mainlist[i][:])
+            print ('\n')
+                
+            
+            #entities.ProperNoun = item
+            
+        m=0
+            
+        for i in mainlist:   
+            print(i)
+            for j in range(1,len(entities.columns)):
+                if (entities.columns[j] in mainlist[i][:]):
+                    entities.loc[m,entities.columns[j]]= entities.loc[m,entities.columns[j]] +1
+                    resourcelist.loc[m,resourcelist.columns[j]].append(i)
+                    
             
             
-    item = list()
-    for res in resources:
-        item.append(res['@surfaceForm'])
-        
-    mainlist = {}
-    j = 0
-    for i in item:
-        mainlist[i] = x[j]
-        j = j +1
-        
-    for i in mainlist:
-        print(i,':', mainlist[i][:])
-        print ('\n')
             
-        
-        #entities.ProperNoun = item
-        
-    m=0
-        
-    for i in mainlist:   
-        print(i)
-        for j in range(1,len(entities.columns)):
-            if (entities.columns[j] in mainlist[i][:]):
-                entities.loc[m,entities.columns[j]]= entities.loc[m,entities.columns[j]] +1
+            
+            
+            
+            
+            
