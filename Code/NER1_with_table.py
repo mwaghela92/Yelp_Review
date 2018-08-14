@@ -39,7 +39,6 @@ CONFIDENCE = '0.2'
 SUPPORT = '10'
 
 for z in range(5):
-    #z = 1919
     Text = data.loc[z,'text']
     Text = Text.split()
     Text1 = [word for word in Text if word not in stopwords.words('english')]
